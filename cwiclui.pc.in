@@ -1,0 +1,10 @@
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: @pkg_name@
+Description: UI interface and its terminal backend for cwiclo.
+Version: @pkg_major@.@pkg_minor@
+Requires: cwiclo
+Libs: -L${libdir} -l@pkg_name@
+Cflags: -I${includedir}

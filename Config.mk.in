@@ -1,0 +1,37 @@
+name		:= @pkg_name@
+
+################ Programs ############################################
+
+CXX		:= @CXX@
+CC		:= @CC@
+AR		:= @AR@
+RANLIB		:= @RANLIB@
+INSTALL		:= @INSTALL@
+INSTALL_DATA	:= ${INSTALL} -m 644
+
+################ Destination #########################################
+
+prefix		:= @prefix@
+includedir	:= @includedir@
+libdir		:= @libdir@
+pkgconfigdir	:= @pkgconfigdir@
+TMPDIR		:= @TMPDIR@
+builddir	:= @builddir@/${name}
+O		:= .o/
+
+################ Compiler options ####################################
+
+#debug		:= 1
+libs		:= @pkglibs@
+ifdef debug
+    cxxflags	:= -O0 -ggdb3
+    ldflags	:= -g -rdynamic ${LDFLAGS}
+    libs	:= $(subst lcwiclo,lcwiclo_d,${libs})
+else
+    cxxflags	:= -Os -g0 -DNDEBUG=1
+    ldflags	:= -s
+endif
+CXXFLAGS	:= -Wall -Wextra -Wredundant-decls -Wshadow
+cxxflags	+= -std=c++17 -fno-exceptions -fno-rtti \
+		   @pkgcflags@ ${CXXFLAGS}
+ldflags		+= @pkgldflags@ ${LDFLAGS}
