@@ -32,6 +32,5 @@ else
     ldflags	:= -s
 endif
 CXXFLAGS	:= -Wall -Wextra -Wredundant-decls -Wshadow
-cxxflags	+= -std=c++17 -fno-exceptions -fno-rtti \
-		   @pkgcflags@ ${CXXFLAGS}
+cxxflags	+= -std=c++17 @pkgcflags@ ${CXXFLAGS}
 ldflags		+= @pkgldflags@ ${LDFLAGS}
