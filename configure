@@ -29,7 +29,10 @@ progs="CC=gcc CC=clang CC=cc CXX=g++ CXX=clang++ CXX=c++ AR=ar RANLIB=ranlib RAN
 pkgs="cwiclo"
 
 # Automatic vars
-[ -d .git ] && pkg_verstr=`git describe --always`
+if [ -d .git ]; then
+    pkg_vverstr=$(expr $(git describe --always) : '\(v[0-9]*\.[0-9]*\)')
+    [ -z "$pkg_vverstr" ] || pkg_verstr=$pkg_vverstr
+fi
 pkg_major=`expr "$pkg_verstr" : 'v\([0-9]*\)\.[0-9]*'`
 pkg_minor=`expr "$pkg_verstr" : 'v[0-9]*\.\([0-9]*\)'`
 pkg_string="$pkg_name $pkg_verstr"

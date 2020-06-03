@@ -197,30 +197,29 @@ void TerminalScreen::unregister_window (const TerminalScreenWindow* w)
 
 Rect TerminalScreen::position_window (const WindowInfo& winfo) const
 {
+    // Find parent window to position in; if none, use screen
+    auto parwin = linear_search_if (_windows, [&](auto& w){ return w->window_id() == winfo.parent(); });
+    Rect scrarea (screen_info().size());
+    auto pararea = parwin ? (*parwin)->area() : scrarea;
+
+    // Window area is specified in parent coordinates
     auto warea = winfo.area();
+    warea.move_by (pararea.pos().as_offset());
 
     // Maximize window if empty
     if (!warea.w)
-	warea.w = screen_info().size().w;
+	warea.w = pararea.w;
     if (!warea.h)
-	warea.h = screen_info().size().h;
+	warea.h = pararea.h;
 
-    // Center windows that are not explicitly positioned
-    if (!warea.x && !warea.y) {
-	warea.w = min (warea.w, screen_info().size().w);
-	warea.h = min (warea.h, screen_info().size().h);
-	if (warea.w < screen_info().size().w)
-	    warea.x = (screen_info().size().w - warea.w)/2u;
-	if (warea.h < screen_info().size().h) {
-	    // Drop top level windows to the bottom.
-	    warea.y = screen_info().size().h - warea.h;
-	    if (winfo.parent())
-		warea.y /= 2;	// parented windows centered
-	}
+    // Center dialogs and toplevel windows
+    if (!parwin || winfo.type() == WindowInfo::Type::Dialog) {
+	warea.x = pararea.x + (pararea.w - warea.w)/2;
+	warea.y = pararea.y + pararea.h - warea.h;
     }
 
     // Clip the window to the screen area
-    return Rect(screen_info().size()).clip (warea);
+    return scrarea.clip (warea);
 }
 
 //}}}-------------------------------------------------------------------
@@ -229,7 +228,7 @@ Rect TerminalScreen::position_window (const WindowInfo& winfo) const
 void TerminalScreen::draw_window (const TerminalScreenWindow* w)
 {
     assert (flag (f_UIMode));
-    assert (position_window(w->window_info()) == w->area() && "you must use position_window to set window area");
+    assert (Rect(screen_info().size()).clip (w->area()) == w->area() && "you must use position_window to set window area");
     if (w->area().empty())
 	return;
     auto wpos (w->area().pos());

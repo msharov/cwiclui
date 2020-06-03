@@ -104,7 +104,9 @@ Rect Window::compute_size_hints (void) const
 
 void Window::layout (void)
 {
-    _scr.open (Info (Info::Type::Normal, compute_size_hints()));
+    auto oinfo (window_info());
+    oinfo.set_area (compute_size_hints());
+    _scr.open (oinfo);
 }
 
 void Window::on_resize (void)
