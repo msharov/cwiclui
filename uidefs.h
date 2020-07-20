@@ -222,7 +222,7 @@ struct KMod {
     static constexpr const Event::key_t Left	= Banner<<1;
     static constexpr const Event::key_t Middle	= Left<1;
     static constexpr const Event::key_t Right	= Middle<<1;
-    static constexpr const Event::key_t Mask	= Shift-1;
+    static constexpr const Event::key_t Mask	= ~(Shift-1);
 };
 
 //}}}2------------------------------------------------------------------
@@ -245,7 +245,7 @@ struct Key {
 	NumLock, SysReq, VolumeUp, Redo, ScrollLock,
 	Undo, Mail, ZoomIn, ZoomOut, New,
 	Wheel, Insert, Ctrl, Stop, Banner,
-	VolumeDown, Menu
+	VolumeDown, Menu, Last
     };
 };
 

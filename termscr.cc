@@ -499,7 +499,14 @@ void TerminalScreen::parse_keycodes (void)
     istream is (_tin.data(), _tin.size());
     while (is.remaining()) {
 	auto ic = is.ptr<char>();
-	Event::key_t c = *ic;
+
+	auto cb = utf8::ibytes (*ic);
+	if (is.remaining() < cb)
+	    break;	// incomplete multibyte char
+	Event::key_t c = *utf8::in(ic);
+	is.skip (cb);
+	ic = is.ptr<char>();
+
 	if (c == 8)
 	    c = Key::Backspace;
 	else if (c == '\t')
@@ -509,15 +516,15 @@ void TerminalScreen::parse_keycodes (void)
 	else if (c < 27)	// 1-26 is ctrl+a - ctrl+z with exceptions of backspace, tab, and newline above
 	    c = KMod::Ctrl+('a'-1+c);
 	else if (c == 27) {	// Esc key or a compound key sequence
-	    auto ematch = match_escape_sequence (ic+1, is.end()-(ic+1));
+	    auto ematch = match_escape_sequence (ic, is.end()-ic);
 	    if (ematch) {	// compound sequence
 		c = ematch->k;
 		is.skip (4-(ematch->s[3]?0:(ematch->s[2]?1:2))); // sequences are 2-4 bytes
 	    } else if (_tin.capacity() <= _tin.size())
 		break;		// possible incomplete sequence, try again later
-	    else if (ic+1 < is.end() && *(ic+1) >= ' ' && *(ic+1) <= '~') {
+	    else if (ic < is.end() && *ic >= ' ' && *ic <= '~') {
 		// Alt+key for printable characters is Esc+key
-		c = KMod::Alt+*(ic+1);
+		c = KMod::Alt+*ic;
 		is.skip(1);
 	    } else		// fallback to plain Esc
 		c = Key::Escape;
@@ -525,7 +532,6 @@ void TerminalScreen::parse_keycodes (void)
 	    c = Key::Print;
 	else if (c == 127)
 	    c = Key::Backspace;
-	is.skip (1);
 	_windows.back()->on_event (Event (Event::Type::KeyDown, c));
     }
     _tin.erase (_tin.begin(), is.begin()-_tin.begin());

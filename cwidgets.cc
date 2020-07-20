@@ -134,8 +134,8 @@ void Editbox::on_key (key_t k)
 	    textw().erase (text().iat(--_cpos));
 	else if (k == Key::Delete && _cpos < coord_t (text().size()))
 	    textw().erase (text().iat(_cpos));
-	else if (k >= ' ' && k <= '~')
-	    textw().insert (text().iat(_cpos++), char(k));
+	else if ((k >= ' ' && k <= '~') || (k > Key::Last && k == (k & Key::Mask)))
+	    textw().insert (text().iat(_cpos++), k);
 	else
 	    return Widget::on_key (k);
 	report_modified();
