@@ -31,12 +31,29 @@ public:
 		Last
 	    };
 	};
-	struct alignas(4) Cell {
-	    char	c;
+	struct alignas(8) Cell {
+	    union Char {
+		char		c[4];
+		uint32_t	u;
+	    public:
+		constexpr void	operator= (char v)		{ c[0] = v; c[1] = 0; }
+		constexpr void	operator= (char32_t v) {
+		    if (v >= char32_t(Drawlist::GChar::Last)) {
+			Cell r = {}; *utf8::out(&r.c.c[0]) = v; u = r.c.u;
+		    } else
+			operator= (char(v));
+		}
+		constexpr void	operator= (const Char& v)	{ u = v.u; }
+		constexpr bool	operator== (const Char& v)const	{ return u == v.u; }
+		constexpr bool	is_ascii (void) const		{ return c[0] >= ' ' && c[0] <= '~'; }
+	    };
+	public:
+	    Char	c;
+	    uint8_t	z;
 	    uint8_t	attr;
 	    icolor_t	fg,bg;
 	public:
-	    constexpr bool	operator== (const Cell& v) const { return *pointer_cast<uint32_t>(this) == *pointer_cast<uint32_t>(&v); }
+	    constexpr bool	operator== (const Cell& v) const { return *pointer_cast<uint64_t>(this) == *pointer_cast<uint64_t>(&v); }
 	    constexpr bool	operator!= (const Cell& v) const { return !operator==(v); }
 	};
 	using value_type	= Cell;
@@ -57,7 +74,7 @@ public:
 	auto		iat (const Point& p) const	{ return iat(p.x,p.y); }
 	auto		iat (const Offset& o)		{ return iat(o.dx,o.dy); }
 	auto		iat (const Offset& o) const	{ return iat(o.dx,o.dy); }
-	static constexpr auto default_cell (void) { return Cell { ' ', 0, IColor::Default, IColor::Default }; }
+	static constexpr auto default_cell (void) { return Cell {{" "}, 0, 0, IColor::Default, IColor::Default }; }
 	void		clear (void)		{ fill (_cells, default_cell()); }
     private:
 	Size		_sz;

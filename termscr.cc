@@ -244,10 +244,10 @@ void TerminalScreen::draw_window (const TerminalScreenWindow* w)
 	    // Convert GChars to ACS chars
 	    static constexpr const char c_acs_sym[] = "+,-.0`afghijklmnopqrstuvwxyz{|}~";
 	    static_assert (size(c_acs_sym)-1 == uint8_t(Drawlist::GChar::N), "c_acs_sym must parallel Drawlist::GChar");
-	    if (unsigned acsi = uint8_t(curcell.c) - uint8_t(Drawlist::GChar::First); acsi < size(c_acs_sym)) {
+	    if (unsigned acsi = uint8_t(curcell.c.c[0]) - uint8_t(Drawlist::GChar::First); acsi < size(c_acs_sym)) {
 		curcell.c = c_acs_sym [acsi];	// ACS char, substitute
 		set_bit (curcell.attr, Surface::Attr::Altcharset);
-	    } else if (curcell.c < ' ' || curcell.c > '~') {
+	    } else if (uint8_t(curcell.c.c[0]) < ' ') {
 		curcell.c = '?';		// unprintable character
 		set_bit (curcell.attr, Surface::Attr::Blink);
 		curcell.fg = IColor::Gray;
@@ -309,9 +309,9 @@ void TerminalScreen::draw_window (const TerminalScreenWindow* w)
 			// Rewrite unchanged chars if only a few and no attributes changed
 			for (; dpos.dx; --dpos.dx) {
 			    auto uici = ici-dpos.dx;
-			    if (uici->attr != _lastcell.attr || uici->c < ' ' || uici->c > '~')
+			    if (uici->attr != _lastcell.attr || !uici->c.is_ascii())
 				break;
-			    _tout += uici->c;
+			    _tout += uici->c.c[0];
 			}
 		    }
 		    if (dpos.dx > 0)
@@ -334,7 +334,7 @@ void TerminalScreen::draw_window (const TerminalScreenWindow* w)
 		_tout += char(15-get_bit (curcell.attr, Surface::Attr::Altcharset));
 
 	    // Write the character
-	    _tout += curcell.c;
+	    _tout += curcell.c.c;
 
 	    // Adjust tracking variables
 	    if (++_curwpos.x > _scrinfo.size().w) {
@@ -669,7 +669,7 @@ void TerminalScreenWindow::Draw_char_bar (const Size& wh, char32_t c)
     for (auto r = orect.h; r--; o += rowskip) {
 	for (auto x = orect.w; x--; ++o) {
 	    o->c = oc.c;
-	    if (oc.c == ' ') {
+	    if (oc.c.c[0] == ' ') {
 		o->bg = oc.bg;
 		o->attr = oc.attr;
 	    } else {
@@ -691,17 +691,20 @@ void TerminalScreenWindow::Draw_edit_text (const string& t, uint32_t cp, HAlign 
     auto lsz = 0u;
     auto tx = _pos.x, ly = _pos.y;
 
+    vector<char32_t> wt (t.length());
+    copy (t.wbegin(), t.wend(), wt.begin());
+
     // Caret position iterator
-    auto cpi = t.begin();
-    if (cp <= t.size()) {
+    auto cpi = wt.begin();
+    if (cp <= wt.size()) {
 	cpi += cp;
 	// Special case for empty string that draws nothing
-	if (t.empty())
+	if (wt.empty())
 	    _caret = _pos;
     }
 
-    for (auto l = t.begin(), tend = t.end(); l < tend; ++ly) {
-	auto lend = t.find ('\n', l);
+    for (auto l = wt.begin(), tend = wt.end(); l < tend; ++ly) {
+	auto lend = linear_search (l, tend, char32_t('\n'));
 	if (!lend)
 	    lend = tend;
 	lsz = lend-l;
