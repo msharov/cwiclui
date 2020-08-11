@@ -22,7 +22,7 @@ O		:= .o/
 ################ Compiler options ####################################
 
 #debug		:= 1
-libs		:= @pkglibs@
+libs		:= @pkg_libs@
 ifdef debug
     cxxflags	:= -O0 -ggdb3
     ldflags	:= -g -rdynamic ${LDFLAGS}
@@ -32,5 +32,5 @@ else
     ldflags	:= -s
 endif
 CXXFLAGS	:= -Wall -Wextra -Wredundant-decls -Wshadow
-cxxflags	+= -std=c++17 @pkgcflags@ ${CXXFLAGS}
-ldflags		+= @pkgldflags@ ${LDFLAGS}
+cxxflags	+= -std=c++17 @pkg_cflags@ ${CXXFLAGS}
+ldflags		+= @pkg_ldflags@ ${LDFLAGS}
