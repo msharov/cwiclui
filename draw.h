@@ -96,7 +96,7 @@ public:
 	inline constexpr void	write (Cmd cmd, uint8_t a1 = 0) { write_cmd_header (cmd, a1); }
 	template <typename... Arg>
 	inline constexpr void	write (Cmd cmd, uint8_t a1, const Arg&... args) {
-				    auto asz = divide_ceil (variadic_stream_size (args...), 4);
+				    auto asz = divide_ceil (variadic_stream_sizeof (args...), 4);
 				    assert (asz <= UINT16_MAX && "Drawlist command size exceeded");
 				    if (asz > UINT16_MAX)
 					return;
