@@ -13,8 +13,10 @@ namespace cwiclui {
 Widget::Widget (Window* w, const Layout& lay)
 :_text()
 ,_widgets()
+,_widget_areas()
 ,_win (w)
 ,_area()
+,_widgets_area()
 ,_size_hints()
 ,_selection()
 ,_flags()
@@ -44,6 +46,7 @@ const Widget::Layout* Widget::add_widgets (const Layout* f, const Layout* l)
 	    nf = w->add_widgets (nf, l);
 	f = nf;
     }
+    _widget_areas.resize (_widgets.size());
     return f;
 }
 
@@ -78,124 +81,44 @@ auto Widget::measure_text (const string_view& text) -> Size
     return sz;
 }
 
-Rect Widget::compute_size_hints (void)
+void Widget::compute_size_hints (void)
 {
-    // The returned size hints contain w/h size and x/y zero sub size counts
     if (_widgets.empty())
-	return Rect (Point(_nexp.x,_nexp.y), size_hints());
+	return;
     // Iterate over all widgets on the same level
-    Rect rsh;
+    _nexp.x = 0;
+    _nexp.y = 0;
     for (auto& w : _widgets) {
-	// Get the size hints and update the aggregate
-	auto sh = w->compute_size_hints();
+	// Update the subwidget size hints
+	w->compute_size_hints();
 
 	// Count expandables
-	if (sh.x || !sh.w)
-	    ++rsh.x;
-	if (sh.y || !sh.h)
-	    ++rsh.y;
-
-	// Packers add up widget sizes in one direction, expand to fit them in
-	// the other. The fallback is Stack, which makes all widgets the same.
-	if (layinfo().type() == Type::HBox)
-	    rsh.w += sh.w;
-	else
-	    rsh.w = max (rsh.w, sh.w);
-	if (layinfo().type() == Type::VBox || layinfo().type() == Type::GroupFrame)
-	    rsh.h += sh.h;
-	else
-	    rsh.h = max (rsh.h, sh.h);
+	if (w->expandables().x || !w->size_hints().w)
+	    ++_nexp.x;
+	if (w->expandables().y || !w->size_hints().h)
+	    ++_nexp.y;
     }
-    // Frames add border thickness after all the subwidgets have been collected
-    if (layinfo().type() == Type::GroupFrame) {
-	rsh.w += 2;
-	rsh.h += 2;
+    // The default layout is Stack, making all widgets the same size
+    Size sh;
+    for (auto& w : _widgets) {
+	sh.w = max (sh.w, w->size_hints().w);
+	sh.h = max (sh.h, w->size_hints().h);
     }
-    // Save expandables count and size hints for resize
-    _nexp.x = rsh.x;
-    _nexp.y = rsh.y;
-    if (!flag (f_ForcedSizeHints))
-	_size_hints = rsh.size();
-    return rsh;
+    set_size_hints (sh);
 }
 
 void Widget::resize (const Rect& inarea)
 {
-    // With expandable size extracted, can place the widget where indicated.
     set_area (inarea);
+    set_widgets_area (inarea);
     on_resize();
+    for (auto wi = 0u; wi < _widgets.size(); ++wi)
+	_widgets[wi]->resize (widget_area (wi));
+}
 
-    // Now for the subwidgets, if there are any.
-    auto subpos = inarea.pos();
-    auto subsz = inarea.size();
-    // Group frame starts by offsetting the frame
-    if (layinfo().type() == Type::GroupFrame) {
-	++subpos.x;
-	++subpos.y;
-	subsz.w -= min (subsz.w, 2);	// may be truncated
-	subsz.h -= min (subsz.h, 2);
-    }
-    // Compute extra size for expandables
-    Size extra;
-    if (size_hints().w < inarea.w)
-	extra.w = inarea.w - size_hints().w;
-    // If no expandables, pad to align
-    if (!_nexp.x) {
-	// padding may be negative if inarea is smaller than fixed size hints
-	coord_t padding = inarea.w - size_hints().w;
-	if (layinfo().halign() == HAlign::Right)
-	    subpos.x += padding;
-	else if (layinfo().halign() == HAlign::Center)
-	    subpos.x += padding/2;
-    }
-    // Same for y
-    if (size_hints().h < inarea.h)
-	extra.h = inarea.h - size_hints().h;
-    if (!_nexp.y) {
-	coord_t padding = inarea.h - size_hints().h;
-	if (layinfo().halign() == HAlign::Right)
-	    subpos.y += padding;
-	else if (layinfo().halign() == HAlign::Center)
-	    subpos.y += padding/2;
-    }
-
-    // Starting with the one after f. If there are no subwidgets, return.
-    unsigned nexpx = _nexp.x, nexpy = _nexp.y;
-    for (auto& w : _widgets) {
-	// Widget position already computed
-	auto wszh = w->size_hints();
-	auto warea = Rect (subpos, subsz);
-	// See if this subwidget gets extra space
-	bool xexp = w->expandables().x || !wszh.w;
-	bool yexp = w->expandables().y || !wszh.h;
-
-	// Packer-type dependent area computation and subpos adjustment
-	if (layinfo().type() == Type::HBox) {
-	    auto sw = min (subsz.w, wszh.w);
-	    if (xexp && nexpx) {		// Add extra space, if available
-		auto ew = extra.w/nexpx--;	// divided equally between expandable subwidgets
-		extra.w -= ew;
-		sw += ew;
-	    }
-	    subpos.x += sw;
-	    subsz.w -= sw;
-	    warea.w = sw;
-	}
-	if (layinfo().type() == Type::VBox || layinfo().type() == Type::GroupFrame) {
-	    auto sh = min (subsz.h, wszh.h);
-	    if (yexp && nexpy) {
-		auto eh = extra.h/nexpy--;
-		extra.h -= eh;
-		sh += eh;
-	    }
-	    subpos.y += sh;
-	    subsz.h -= sh;
-	    warea.h = sh;
-	}
-
-	// Recurse to layout w.
-	w->resize (warea);
-    }
+void Widget::on_resize (void)
+{
+    fill (_widget_areas, widgets_area());
 }
 
 //}}}-------------------------------------------------------------------

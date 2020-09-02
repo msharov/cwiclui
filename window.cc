@@ -18,9 +18,13 @@ DEFINE_INTERFACE (ScreenR)
 
 Window::Window (const Msg::Link& l)
 : Msger (l)
-,_scr (l.dest)
-,_focused (wid_None)
 ,_widgets()
+,_widgets_area()
+,_scr (l.dest)
+,_size_hints()
+,_focused (wid_None)
+,_info()
+,_scrinfo()
 {
     _scr.get_info();
 }
@@ -85,48 +89,43 @@ void Window::set_stack_selection (widgetid_t id, dim_t s)
 //}}}-------------------------------------------------------------------
 //{{{ Layout
 
-Rect Window::compute_size_hints (void) const
+void Window::compute_size_hints (void)
 {
-    Rect wh (_scrinfo.size());
-    if (_widgets)
-	wh = _widgets->compute_size_hints();
-    // Stretch, if requested
-    if (wh.x) {
-	wh.w = _scrinfo.size().w;
-	wh.x = 0;
+    Size sh (_scrinfo.size());
+    if (_widgets) {
+	_widgets->compute_size_hints();
+	sh = _widgets->size_hints();
+	// Stretch, if requested
+	if (_widgets->expandables().x)
+	    sh.w = _scrinfo.size().w;
+	if (_widgets->expandables().y)
+	    sh.h = _scrinfo.size().h;
     }
-    if (wh.y) {
-	wh.h = _scrinfo.size().h;
-	wh.y = 0;
-    }
-    return wh;
+    set_size_hints (sh);
 }
 
 void Window::layout (void)
 {
+    compute_size_hints();
     auto oinfo (window_info());
-    oinfo.set_area (compute_size_hints());
+    oinfo.set_area (Rect (size_hints()));
     _scr.open (oinfo);
-}
-
-void Window::on_resize (void)
-{
-    if (_widgets) {
-	// Size hints must now be recomputed as they may depend on
-	// screen info, which is usually set just before this call.
-	_widgets->compute_size_hints();
-	// Layout subwidgets in the computed area
-	_widgets->resize (Rect (area().size()));
-	if (!focused_widget_id())
-	    focus_next();	// initialize focus if needed
-    }
-    draw();
 }
 
 void Window::ScreenR_resize (const Info& wi)
 {
     _info = wi;
     on_resize();
+    if (_widgets) {
+	// Size hints must now be recomputed as they may depend on
+	// screen info or on forced hints set in on_resize
+	_widgets->compute_size_hints();
+	_widgets->resize (widgets_area());
+	// Initialize focus if needed
+	if (!focused_widget_id())
+	    focus_next();
+    }
+    draw();
 }
 
 //}}}-------------------------------------------------------------------

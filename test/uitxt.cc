@@ -17,8 +17,7 @@ private:
     void on_selection (widgetid_t id, unsigned, unsigned) override;
 private:
     enum : widgetid_t {
-	wid_ScreenHole = wid_First,
-	wid_TabBar,
+	wid_TabBar = wid_First,
 	wid_TabStack,
 	wid_Radio1,
 	wid_Radio2,
@@ -35,7 +34,6 @@ private:
     };
     static constexpr const Layout c_layout[] = {
 	WL_(VBox),
-	WL___(None,		wid_ScreenHole),
 	WL___(HSplitter),
 	WL___(HBox),
 	WL_____(Radiobox,	wid_Radio1),
@@ -84,8 +82,8 @@ UITWindow::UITWindow (const Msg::Link& l)
 
 void UITWindow::on_resize (void)
 {
-    set_widget_size_hints (wid_ScreenHole, 0, area().h-12);
     Window::on_resize();
+    set_widgets_area (Rect (0, area().h-12, area().w, 12));
 }
 
 DEFINE_WIDGET_WRITE_DRAWLIST (UITWindow, Drawlist, dlw)

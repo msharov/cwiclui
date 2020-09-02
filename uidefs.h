@@ -19,7 +19,7 @@ using color_t	= uint32_t;
 
 //{{{2 Offset
 
-struct Offset {
+struct alignas(4) Offset {
     coord_t	dx;
     coord_t	dy;
 public:
@@ -36,7 +36,7 @@ public:
 //}}}2
 //{{{2 Size
 
-struct Size {
+struct alignas(4) Size {
     dim_t	w;
     dim_t	h;
 public:
@@ -55,7 +55,7 @@ public:
 //}}}2
 //{{{2 Point
 
-struct Point {
+struct alignas(4) Point {
     coord_t	x;
     coord_t	y;
 public:
@@ -82,7 +82,7 @@ public:
 //}}}2
 //{{{2 Rect
 
-struct Rect {
+struct alignas(4) Rect {
     coord_t	x;
     coord_t	y;
     dim_t	w;

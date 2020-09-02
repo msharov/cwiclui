@@ -43,12 +43,14 @@ public:
     auto&		window_info (void) const	{ return _info; }
     auto&		screen_info (void) const	{ return _scrinfo; }
     auto&		area (void) const		{ return window_info().area(); }
+    auto&		widgets_area (void) const	{ return _widgets_area; }
+    auto&		size_hints (void) const		{ return _size_hints; }
 protected:
     bool		dispatch (Msg& msg) override;
     void		on_msger_destroyed (mrid_t mid) override;
-    virtual Rect	compute_size_hints (void) const;
+    virtual void	compute_size_hints (void);
+    virtual void	on_resize (void)		{ set_widgets_area (Rect (area().size())); }
     void		layout (void);
-    virtual void	on_resize (void);
     void		create_widgets (const Layout* f, const Layout* l);
     template <unsigned N>
     void		create_widgets (const Layout (&l)[N])
@@ -57,11 +59,12 @@ protected:
     void		destroy_widgets (void)			{ _widgets.reset(); }
     auto		widget_by_id (widgetid_t id) const	{ return _widgets->widget_by_id(id); }
     auto		widget_by_id (widgetid_t id)		{ return _widgets->widget_by_id(id); }
+    void		set_widgets_area (const Rect& wa)	{ _widgets_area = wa; }
     void		set_widget_text (widgetid_t id, const char* t)			{ if (auto w = widget_by_id (id); w) w->set_text (t); }
     void		set_widget_text (widgetid_t id, const string& t)		{ if (auto w = widget_by_id (id); w) w->set_text (t); }
     void		set_widget_text (widgetid_t id, const char* t, unsigned n)	{ if (auto w = widget_by_id (id); w) w->set_text (t,n); }
-    void		set_widget_size_hints (widgetid_t id, const Size& s)		{ if (auto w = widget_by_id (id); w) w->set_size_hints (s); }
-    void		set_widget_size_hints (widgetid_t id, dim_t ww, dim_t hh)	{ if (auto w = widget_by_id (id); w) w->set_size_hints (ww,hh); }
+    void		set_widget_size_hints (widgetid_t id, const Size& s)		{ if (auto w = widget_by_id (id); w) w->set_forced_size_hints (s); }
+    void		set_widget_size_hints (widgetid_t id, dim_t ww, dim_t hh)	{ if (auto w = widget_by_id (id); w) w->set_forced_size_hints (ww,hh); }
     void		set_widget_selection (widgetid_t id, const Size& s)		{ if (auto w = widget_by_id (id); w) w->set_selection (s); }
     void		set_widget_selection (widgetid_t id, dim_t f, dim_t t)		{ if (auto w = widget_by_id (id); w) w->set_selection (f,t); }
     void		set_widget_selection (widgetid_t id, dim_t f)			{ if (auto w = widget_by_id (id); w) w->set_selection (f); }
@@ -71,8 +74,10 @@ protected:
     inline void		set_radiobox_selection (widgetid_t id, const widgetid_t (&rb)[N])
 			    { set_radiobox_selection (id, ARRAY_BLOCK(rb)); }
     void		set_stack_selection (widgetid_t id, dim_t s);
+    void		set_size_hints (const Size& sh)		{ _size_hints = sh; }
+    void		set_size_hints (dim_t w, dim_t h)	{ set_size_hints (Size(w,h)); }
     void		focus_widget (widgetid_t id);
-    auto		focused_widget_id (void) const	{ return _focused; }
+    auto		focused_widget_id (void) const		{ return _focused; }
     const Widget*	focused_widget (void) const
 			    { return widget_by_id (focused_widget_id()); }
     Widget*		focused_widget (void)
@@ -82,11 +87,13 @@ protected:
 private:
     virtual void	on_draw (drawlist_t&) const {}
 private:
+    unique_ptr<Widget>	_widgets;
+    Rect		_widgets_area;
     PScreen		_scr;
+    Size		_size_hints;
+    widgetid_t		_focused;
     Info		_info;
     ScreenInfo		_scrinfo;
-    widgetid_t		_focused;
-    unique_ptr<Widget>	_widgets;
 };
 
 } // namespace cwiclui

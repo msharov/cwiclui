@@ -99,8 +99,10 @@ public:
     auto		widget_id (void) const			{ return layinfo().id(); }
     auto&		size_hints (void) const			{ return _size_hints; }
     auto&		expandables (void) const		{ return _nexp; }
-    void		set_size_hints (const Size& sh)		{ _size_hints = sh; set_flag (f_ForcedSizeHints); }
-    void		set_size_hints (dim_t w, dim_t h)	{ set_size_hints (Size(w,h)); }
+    bool		expandable_w (void) const		{ return expandables().x || !size_hints().w; }
+    bool		expandable_h (void) const		{ return expandables().y || !size_hints().h; }
+    void		set_forced_size_hints (const Size& sh)	{ _size_hints = sh; set_flag (f_ForcedSizeHints); }
+    void		set_forced_size_hints (dim_t w, dim_t h){ _size_hints.w = w; _size_hints.h = h; set_flag (f_ForcedSizeHints); }
     void		set_selection (const Size& s)		{ _selection = s; }
     void		set_selection (dim_t f, dim_t t)	{ set_selection (Size(f,t)); }
     void		set_selection (dim_t f)			{ set_selection (f,f+1); }
@@ -134,27 +136,36 @@ public:
     auto		next_focus (widgetid_t wid) const	{ return get_focus_neighbors_for (wid).next; }
     auto		prev_focus (widgetid_t wid) const	{ return get_focus_neighbors_for (wid).prev; }
     virtual void	on_set_text (void)			{ }
-    virtual void	on_resize (void)			{ }
+    virtual void	on_resize (void);
     virtual void	on_event (const Event& ev);
     virtual void	on_key (key_t);
     static Size		measure_text (const string_view& text);
     auto		measure (void) const			{ return measure_text (text()); }
     auto		focused (void) const			{ return flag (f_Focused); }
-    Rect		compute_size_hints (void);
+    virtual void	compute_size_hints (void);
     void		resize (const Rect& area);
 protected:
     auto		parent_window (void) const		{ return _win; }
     auto&		textw (void)				{ return _text; }
     void		report_modified (void) const;
     void		report_selection (void) const;
+    auto&		widgets (void) const			{ return _widgets; }
+    auto&		widget_area (unsigned wi) const		{ return _widget_areas[wi]; }
+    void		set_widget_area (unsigned wi, const Rect& a)	{ _widget_areas[wi] = a; }
+    auto&		widgets_area (void) const		{ return _widgets_area; }
+    void		set_widgets_area (const Rect& a)	{ _widgets_area = a; }
+    void		set_size_hints (const Size& sh)		{ if (!flag (f_ForcedSizeHints)) _size_hints = sh; }
+    void		set_size_hints (dim_t w, dim_t h)	{ set_size_hints (Size(w,h)); }
 private:
     inline PWidgetR	widget_reply (void) const;
     virtual void	on_draw (drawlist_t&) const {}
 private:
     string		_text;
     widgetvec_t		_widgets;
+    vector<Rect>	_widget_areas;
     Window*		_win;
     Rect		_area;
+    Rect		_widgets_area;
     Size		_size_hints;
     Size		_selection;
     uint16_t		_flags;

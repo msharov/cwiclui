@@ -263,6 +263,90 @@ DEFINE_WIDGET_WRITE_DRAWLIST (Listbox, Drawlist, drw)
 }
 
 //}}}-------------------------------------------------------------------
+//{{{ HBox
+
+void HBox::compute_size_hints (void)
+{
+    Widget::compute_size_hints();
+    dim_t cw = 0;
+    for (auto& w : widgets())
+	cw += w->size_hints().w;
+    set_size_hints (cw, size_hints().h);
+}
+
+void HBox::on_resize (void)
+{
+    auto wr = widgets_area();
+
+    // If no expandables, pad to align
+    unsigned nexpx = expandables().x, hintw = size_hints().w;
+    if (!nexpx) {
+	auto xpad = wr.w - hintw;
+	if (layinfo().halign() == HAlign::Left)
+	    xpad = 0;
+	else if (layinfo().halign() == HAlign::Center)
+	    xpad /= 2;
+	wr.x += xpad;
+	wr.w -= xpad;
+    }
+
+    // Tile subwidgets horizontally
+    for (unsigned wi = 0, ew = max (0, wr.w - hintw); wi < widgets().size(); ++wi) {
+	auto ww = min (wr.w, widgets()[wi]->size_hints().w);
+	if (nexpx && widgets()[wi]->expandable_w()) {
+	    auto wew = ew/nexpx--;
+	    ew -= wew;
+	    ww += wew;
+	}
+	set_widget_area (wi, Rect (wr.x, wr.y, ww, wr.h));
+	wr.x += ww;
+	wr.w -= ww;
+    }
+}
+
+//}}}-------------------------------------------------------------------
+//{{{ VBox
+
+void VBox::compute_size_hints (void)
+{
+    Widget::compute_size_hints();
+    dim_t ch = 0;
+    for (auto& w : widgets())
+	ch += w->size_hints().h;
+    set_size_hints (size_hints().w, ch);
+}
+
+void VBox::on_resize (void)
+{
+    auto wr = widgets_area();
+
+    // If no expandables, pad to align
+    unsigned nexpy = expandables().y, hinth = size_hints().h;
+    if (!nexpy) {
+	auto ypad = wr.w - hinth;
+	if (layinfo().valign() == VAlign::Top)
+	    ypad = 0;
+	else if (layinfo().valign() == VAlign::Center)
+	    ypad /= 2;
+	wr.y += ypad;
+	wr.h -= ypad;
+    }
+
+    // Tile subwidgets vertically
+    for (unsigned wi = 0, eh = max (0, wr.h - hinth); wi < widgets().size(); ++wi) {
+	auto wh = min (wr.h, widgets()[wi]->size_hints().h);
+	if (nexpy && widgets()[wi]->expandable_h()) {
+	    auto weh = eh/nexpy--;
+	    eh -= weh;
+	    wh += weh;
+	}
+	set_widget_area (wi, Rect (wr.x, wr.y, wr.w, wh));
+	wr.y += wh;
+	wr.h -= wh;
+    }
+}
+
+//}}}-------------------------------------------------------------------
 //{{{ HSplitter
 
 DEFINE_WIDGET_WRITE_DRAWLIST (HSplitter, Drawlist, drw)
@@ -276,6 +360,24 @@ DEFINE_WIDGET_WRITE_DRAWLIST (VSplitter, Drawlist, drw)
 
 //}}}-------------------------------------------------------------------
 //{{{ GroupFrame
+
+void GroupFrame::compute_size_hints (void)
+{
+    VBox::compute_size_hints();
+    set_size_hints (size_hints().w+2, size_hints().h+2);
+}
+
+void GroupFrame::on_resize (void)
+{
+    // Shrink subwidget area by the border
+    auto wa = widgets_area();
+    ++wa.x;
+    ++wa.y;
+    wa.w -= min (wa.w, 2);
+    wa.h -= min (wa.h, 2);
+    set_widgets_area (wa);
+    VBox::on_resize();
+}
 
 DEFINE_WIDGET_WRITE_DRAWLIST (GroupFrame, Drawlist, drw)
 {
@@ -316,6 +418,8 @@ DEFINE_WIDGET_WRITE_DRAWLIST (ProgressBar, Drawlist, drw)
 //{{{ Default widget factory
 
 BEGIN_WIDGET_FACTORY (Widget::default_factory)
+    WIDGET_TYPE_IMPLEMENT (HBox, HBox)
+    WIDGET_TYPE_IMPLEMENT (VBox, VBox)
     WIDGET_TYPE_IMPLEMENT (GroupFrame, GroupFrame)
     WIDGET_TYPE_IMPLEMENT (Label, Label)
     WIDGET_TYPE_IMPLEMENT (Button, Button)

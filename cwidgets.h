@@ -98,6 +98,26 @@ private:
     dim_t	_top;
 };
 //}}}---------------------------------------------------------------
+//{{{ HBox
+
+class HBox : public Widget {
+public:
+		HBox (Window* w, const Layout& lay)
+		    : Widget(w,lay) {}
+    void	compute_size_hints (void) override;
+    void	on_resize (void) override;
+};
+//}}}---------------------------------------------------------------
+//{{{ VBox
+
+class VBox : public Widget {
+public:
+		VBox (Window* w, const Layout& lay)
+		    : Widget(w,lay) {}
+    void	compute_size_hints (void) override;
+    void	on_resize (void) override;
+};
+//}}}---------------------------------------------------------------
 //{{{ HSplitter
 
 class HSplitter : public Widget {
@@ -120,10 +140,12 @@ private:
 //}}}---------------------------------------------------------------
 //{{{ GroupFrame
 
-class GroupFrame : public Widget {
+class GroupFrame : public VBox {
 public:
 		GroupFrame (Window* w, const Layout& lay)
-		    : Widget(w,lay) {}
+		    : VBox(w,lay) {}
+    void	compute_size_hints (void) override;
+    void	on_resize (void) override;
 private:
     DECLARE_WIDGET_WRITE_DRAWLIST (Drawlist);
 };
