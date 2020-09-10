@@ -842,8 +842,10 @@ void TerminalScreenWindow::Draw_panel (const Size& wh, PanelType t)
 	_pos.x += wh.w-2;
 	Draw_char (']');
 	_pos.x -= wh.w-2;
-    } else if (t == PanelType::Sunken || t == PanelType::Editbox) {
+    } else if (t == PanelType::Sunken || t == PanelType::Editbox || t == PanelType::FocusedEditbox) {
 	set_bit (_attr.attr, Surface::Attr::Underline);
+	if (t == PanelType::FocusedEditbox)
+	    set_bit (_attr.attr, Surface::Attr::Reverse);
 	Draw_bar (wh);
     } else if (t == PanelType::Selection || t == PanelType::Statusbar) {
 	set_bit (_attr.attr, Surface::Attr::Reverse);

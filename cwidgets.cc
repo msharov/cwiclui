@@ -149,7 +149,7 @@ void Editbox::on_key (key_t k)
 
 DEFINE_WIDGET_WRITE_DRAWLIST (Editbox, Drawlist, drw)
 {
-    drw.panel (area().size(), PanelType::Editbox);
+    drw.panel (area().size(), focused() ? PanelType::FocusedEditbox : PanelType::Editbox);
     if (focused())
 	drw.edit_text (text().iat(_fc), text().size()-_fc, _cpos-_fc);
     else

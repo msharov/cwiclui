@@ -68,7 +68,8 @@ public:
 	Raised, Sunken, Selection, MoreLeft, MoreRight,
 	MoreUp, MoreDown, Button, ButtonOn, Checkbox,
 	CheckboxOn, Radio, RadioOn, Editbox, Selbox,
-	Listbox, Statusbar, Scrollbar, Progress, ProgressOn
+	Listbox, Statusbar, Scrollbar, Progress, ProgressOn,
+	FocusedEditbox
     };
     //}}}---------------------------------------------------------------
     //{{{ Writer
