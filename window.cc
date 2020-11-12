@@ -8,13 +8,7 @@
 
 namespace cwiclui {
 
-//{{{ Statics ----------------------------------------------------------
-
-DEFINE_INTERFACE (Screen)
-DEFINE_INTERFACE (ScreenR)
-
-//}}}-------------------------------------------------------------------
-//{{{ Widget creation
+//{{{ Widget creation --------------------------------------------------
 
 Window::Window (const Msg::Link& l)
 : Msger (l)

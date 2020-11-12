@@ -201,7 +201,7 @@ void Widget::on_event (const Event& ev)
 	    on_key (ev.key());
 	// Key events that the focused widget does not use are forwarded
 	// back here with the source widget id set to that widget.
-	auto focusw = linear_search_if (_widgets, [](auto& w) { return w->focused(); });
+	auto focusw = find_if (_widgets, [](auto& w) { return w->focused(); });
 	if (focusw)
 	    (*focusw)->on_event (ev);
     } else for (auto& w : _widgets)

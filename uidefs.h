@@ -107,10 +107,10 @@ public:
     constexpr void	assign (const Point& p, const Size& s)	{ move_to(p); resize(s); }
     [[nodiscard]] constexpr Rect clip (const Rect& r) const {
 			    Rect cr;
-			    cr.x = min (max (r.x, x), x+w);
-			    cr.y = min (max (r.y, y), y+h);
-			    cr.w = min (max (r.x+r.w, cr.x), x+w) - cr.x;
-			    cr.h = min (max (r.y+r.h, cr.y), y+h) - cr.y;
+			    cr.x = clamp (r.x, x, x+w);
+			    cr.y = clamp (r.y, y, y+h);
+			    cr.w = clamp (r.x+r.w, cr.x, x+w) - cr.x;
+			    cr.h = clamp (r.y+r.h, cr.y, y+h) - cr.y;
 			    return cr;
 			}
 };

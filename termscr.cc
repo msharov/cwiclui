@@ -165,9 +165,9 @@ void TerminalScreen::update_screen_size (void)
     reset();
 }
 
-void TerminalScreen::Signal_signal (int sig)
+void TerminalScreen::Signal_signal (const PSignal::Info& si)
 {
-    if (sig == SIGWINCH)
+    if (si.sig == SIGWINCH)
 	update_screen_size();
 }
 
@@ -177,7 +177,7 @@ void TerminalScreen::Signal_signal (int sig)
 void TerminalScreen::register_window (TerminalScreenWindow* w)
 {
     assert (w);
-    assert (!linear_search (_windows, w));
+    assert (!find (_windows, w));
     ui_mode();
     _windows.push_back (w);
 }
@@ -198,7 +198,7 @@ void TerminalScreen::unregister_window (const TerminalScreenWindow* w)
 Rect TerminalScreen::position_window (const WindowInfo& winfo) const
 {
     // Find parent window to position in; if none, use screen
-    auto parwin = linear_search_if (_windows, [&](auto& w){ return w->window_id() == winfo.parent(); });
+    auto parwin = find_if (_windows, [&](auto& w){ return w->window_id() == winfo.parent(); });
     Rect scrarea (screen_info().size());
     auto pararea = parwin ? (*parwin)->area() : scrarea;
 
@@ -710,7 +710,7 @@ void TerminalScreenWindow::Draw_edit_text (const string& t, uint32_t cp, HAlign 
     }
 
     for (auto l = wt.begin(), tend = wt.end(); l < tend; ++ly) {
-	auto lend = linear_search (l, tend, char32_t('\n'));
+	auto lend = find (l, tend, char32_t('\n'));
 	if (!lend)
 	    lend = tend;
 	lsz = lend-l;

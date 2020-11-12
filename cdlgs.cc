@@ -9,11 +9,6 @@ namespace cwiclui {
 
 //----------------------------------------------------------------------
 
-DEFINE_INTERFACE (MessageBox)
-DEFINE_INTERFACE (MessageBoxR)
-
-//----------------------------------------------------------------------
-
 MessageBox::MessageBox (const Msg::Link& l)
 : Window(l)
 ,_prompt()

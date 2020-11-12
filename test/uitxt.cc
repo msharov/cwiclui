@@ -115,7 +115,7 @@ void UITWindow::on_key (key_t k)
 void UITWindow::on_selection (widgetid_t id, unsigned f, unsigned l)
 {
     // Switch tabs on radio boxes
-    auto rsel = linear_search (c_tab_rbox, id);
+    auto rsel = find (c_tab_rbox, id);
     if (rsel) {
 	set_radiobox_selection (id, c_tab_rbox);
 	set_stack_selection (wid_TabStack, rsel-begin(c_tab_rbox));

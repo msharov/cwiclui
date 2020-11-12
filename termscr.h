@@ -89,7 +89,7 @@ public:
     Rect	position_window (const WindowInfo& winfo) const;
     void	draw_window (const TerminalScreenWindow* w);
     bool	dispatch (Msg& msg) override;
-    inline void	Signal_signal (int s);
+    inline void	Signal_signal (const PSignal::Info& s);
     void	TimerR_timer (PTimerR::fd_t);
     auto&	screen_info (void) const { return _scrinfo; }
 protected:
