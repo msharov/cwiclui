@@ -96,7 +96,7 @@ void TerminalScreen::ui_mode (void)
 	T_ALTCHARSET_ENABLE
 	T_CARET_ON;
     for (int fd = STDIN_FILENO; fd <= STDOUT_FILENO; ++fd)
-	PTimer::make_nonblocking (fd);
+	make_fd_nonblocking (fd);
     set_flag (f_CaretOn);
     set_flag (f_UIMode);
     update_screen_size();
@@ -112,7 +112,7 @@ void TerminalScreen::tt_mode (void)
     reset();
     caret_state (true);
     for (int fd = STDIN_FILENO; fd <= STDOUT_FILENO; ++fd)
-	PTimer::make_blocking (fd);
+	make_fd_blocking (fd);
     _tout +=
 	T_ALTCHARSET_DISABLE
 	T_ALTSCREEN_OFF;
