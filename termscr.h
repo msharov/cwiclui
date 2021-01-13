@@ -14,6 +14,7 @@ class TerminalScreenWindow;
 //----------------------------------------------------------------------
 
 class TerminalScreen : public Msger {
+    IMPLEMENT_INTERFACES_I (Msger,,(PTimer)(PSignal))
 public:
     enum { f_UIMode = Msger::f_Last, f_CaretOn, f_InputEOF, f_Last };
     using windowid_t = WindowInfo::windowid_t;
@@ -88,9 +89,8 @@ public:
     void	unregister_window (const TerminalScreenWindow* w);
     Rect	position_window (const WindowInfo& winfo) const;
     void	draw_window (const TerminalScreenWindow* w);
-    bool	dispatch (Msg& msg) override;
     inline void	Signal_signal (const PSignal::Info& s);
-    void	TimerR_timer (PTimerR::fd_t);
+    void	Timer_timer (fd_t fd);
     auto&	screen_info (void) const { return _scrinfo; }
 protected:
 		TerminalScreen (void);
@@ -116,6 +116,7 @@ private:
 //----------------------------------------------------------------------
 
 class TerminalScreenWindow : public Msger {
+    IMPLEMENT_INTERFACES_I (Msger, (PScreen),)
 public:
     using Surface	= TerminalScreen::Surface;
     using Cell		= Surface::Cell;
@@ -123,9 +124,8 @@ public:
     using windowid_t	= WindowInfo::windowid_t;
     enum { f_DrawInProgress = Msger::f_Last, f_DrawPending, f_Last };
 public:
-		TerminalScreenWindow (const Msg::Link& l);
+		TerminalScreenWindow (Msg::Link l);
 		~TerminalScreenWindow (void) override;
-    bool	dispatch (Msg& msg) override;
     auto&	screen_info (void) const	{ return TerminalScreen::instance().screen_info(); }
     auto&	window_info (void) const	{ return _winfo; }
     auto	window_id (void) const		{ return msger_id(); }
@@ -138,12 +138,13 @@ public:
     void	reset (void);
     void	on_resize (const Rect& warea);
     void	on_new_screen_info (void);
-    void	Screen_open (const WindowInfo& wi);
-    void	Screen_draw (const cmemlink& dl);
-    void	Screen_get_info (void)		{ _reply.screen_info (screen_info()); }
-    void	Screen_close (void)		{ set_unused (true); }
     bool	is_mapped (void) const		{ return area().w; }
 private:
+		friend class PScreen;
+    inline void	Screen_open (const WindowInfo& wi);
+    inline void	Screen_draw (const cmemlink& dl);
+    void	Screen_get_info (void)		{ PScreen::Reply (creator_link()).screen_info (screen_info()); }
+    void	Screen_close (void)		{ set_unused (true); }
 		friend class Drawlist;
     Rect	interior_area (void) const	{ return Rect (area().size()); }
     Rect	clip_to_screen (void) const	{ return TerminalScreen::instance().position_window (window_info()); }
@@ -171,7 +172,6 @@ private:
     Rect	_viewport;
     Point	_pos,_caret;
     Cell	_attr;
-    PScreenR	_reply;
     WindowInfo	_winfo;
 };
 

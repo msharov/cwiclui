@@ -39,6 +39,8 @@ static struct termios s_old_termios = {};
 //}}}-------------------------------------------------------------------
 //{{{ TerminalScreen
 
+IMPLEMENT_INTERFACES_D (TerminalScreen)
+
 TerminalScreen::TerminalScreen (void)
 : Msger()
 ,_windows()
@@ -64,13 +66,6 @@ TerminalScreen::~TerminalScreen (void)
 {
     _windows.clear();
     tt_mode();
-}
-
-bool TerminalScreen::dispatch (Msg& msg)
-{
-    return PTimerR::dispatch (this, msg)
-	|| PSignal::dispatch (this, msg)
-	|| Msger::dispatch (msg);
 }
 
 //}}}-------------------------------------------------------------------
@@ -370,7 +365,7 @@ void TerminalScreen::draw_window (const TerminalScreenWindow* w)
 //}}}-------------------------------------------------------------------
 //{{{ TerminalScreen input processing
 
-void TerminalScreen::TimerR_timer (PTimerR::fd_t)
+void TerminalScreen::Timer_timer (fd_t)
 {
     static constexpr const Event c_vsync_event (Event::Type::VSync, 0, 60);
     static constexpr const Event c_close_event (Event::Type::Close);
@@ -542,14 +537,15 @@ void TerminalScreen::parse_keycodes (void)
 //}}}-------------------------------------------------------------------
 //{{{ TerminalScreenWindow
 
-TerminalScreenWindow::TerminalScreenWindow (const Msg::Link& l)
+IMPLEMENT_INTERFACES_D (TerminalScreenWindow)
+
+TerminalScreenWindow::TerminalScreenWindow (Msg::Link l)
 : Msger (l)
 ,_surface()
 ,_viewport()
 ,_pos()
 ,_caret (-1,-1)
 ,_attr (Surface::default_cell())
-,_reply (l)
 ,_winfo()
 {
     TerminalScreen::instance().register_window (this);
@@ -558,12 +554,6 @@ TerminalScreenWindow::TerminalScreenWindow (const Msg::Link& l)
 TerminalScreenWindow::~TerminalScreenWindow (void)
 {
     TerminalScreen::instance().unregister_window (this);
-}
-
-bool TerminalScreenWindow::dispatch (Msg& msg)
-{
-    return PScreen::dispatch (this, msg)
-	|| Msger::dispatch (msg);
 }
 
 void TerminalScreenWindow::on_event (const Event& ev)
@@ -575,7 +565,7 @@ void TerminalScreenWindow::on_event (const Event& ev)
 	if (flag (f_DrawPending))
 	    return draw();	// for multiple draws per frame, only send vsync for the last one
     }
-    _reply.event (ev);
+    PScreen::Reply (creator_link()).event (ev);
 }
 
 //}}}-------------------------------------------------------------------
@@ -600,7 +590,7 @@ void TerminalScreenWindow::on_resize (const Rect& warea)
 {
     _winfo.set_area (warea);
     _surface.resize (_winfo.area().size());
-    _reply.resize (_winfo);
+    PScreen::Reply (creator_link()).resize (_winfo);
     reset();
 }
 
@@ -608,7 +598,7 @@ void TerminalScreenWindow::on_new_screen_info (void)
 {
     if (auto newarea = clip_to_screen(); newarea != area())
 	on_resize (newarea);
-    _reply.screen_info (screen_info());
+    PScreen::Reply (creator_link()).screen_info (screen_info());
 }
 
 //}}}-------------------------------------------------------------------

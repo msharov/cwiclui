@@ -124,8 +124,8 @@ void Widget::on_resize (void)
 //}}}-------------------------------------------------------------------
 //{{{ Content
 
-PWidgetR Widget::widget_reply (void) const
-    { return PWidgetR (parent_window()->msger_id(), parent_window()->msger_id()); }
+PWidget::Reply Widget::widget_reply (void) const
+    { return PWidget::Reply (parent_window()->msger_id(), parent_window()->msger_id()); }
 void Widget::report_selection (void) const
     { widget_reply().selection (widget_id(), selection()); }
 void Widget::report_modified (void) const

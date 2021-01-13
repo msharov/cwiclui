@@ -11,6 +11,7 @@ namespace cwiclui {
 class Widget;
 
 class Window : public Msger {
+    IMPLEMENT_INTERFACES_I (Msger,,(PWidget)(PScreen))
 public:
     using key_t		= Event::key_t;
     using Layout	= Widget::Layout;
@@ -19,7 +20,7 @@ public:
     using windowid_t	= WindowInfo::windowid_t;
     enum { f_DrawInProgress = Msger::f_Last, f_DrawPending, f_Last };
 public:
-    explicit		Window (const Msg::Link& l);
+    explicit		Window (Msg::Link l);
     void		draw (void);
     virtual void	on_event (const Event& ev);
     virtual void	on_modified (widgetid_t, const string_view&) { draw(); }
@@ -27,15 +28,15 @@ public:
     virtual void	on_key (key_t key);
     void		close (void);
 
-    void		PWidget_event (const Event& ev)	{ on_event (ev); }
-    void		PWidgetR_modified (widgetid_t wid, const string_view& t)
+    void		Widget_event (const Event& ev)	{ on_event (ev); }
+    void		Widget_modified (widgetid_t wid, const string_view& t)
 			    { on_modified (wid, t); }
-    void		PWidgetR_selection (widgetid_t wid, const Size& sel)
+    void		Widget_selection (widgetid_t wid, const Size& sel)
 			    { on_selection (wid, sel.w, sel.h); }
-    void		ScreenR_event (const Event& ev)	{ on_event (ev); }
-    void		ScreenR_expose (void)		{ draw(); }
-    void		ScreenR_resize (const Info& wi);
-    void		ScreenR_screen_info (const ScreenInfo& scrinfo)
+    void		Screen_event (const Event& ev)	{ on_event (ev); }
+    void		Screen_expose (void)		{ draw(); }
+    void		Screen_resize (const Info& wi);
+    void		Screen_screen_info (const ScreenInfo& scrinfo)
 			    { _scrinfo = scrinfo; layout(); }
 
     auto		window_id (void) const		{ return _scr.dest(); }
@@ -46,7 +47,6 @@ public:
     auto&		widgets_area (void) const	{ return _widgets_area; }
     auto&		size_hints (void) const		{ return _size_hints; }
 protected:
-    bool		dispatch (Msg& msg) override;
     void		on_msger_destroyed (mrid_t mid) override;
     virtual void	compute_size_hints (void);
     virtual void	on_resize (void)		{ set_widgets_area (Rect (area().size())); }

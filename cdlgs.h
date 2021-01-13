@@ -11,7 +11,7 @@ namespace cwiclui {
 //{{{ PMessageBox ------------------------------------------------------
 
 class PMessageBox : public Proxy {
-    DECLARE_INTERFACE (MessageBox, (ask,"qqs"))
+    DECLARE_INTERFACE (Proxy, MessageBox, (ask,"qqs")(answer,"q"))
 public:
     enum class Answer : uint16_t { Cancel, Ok, Ignore, Yes = Ok, Retry = Ok, No = Ignore };
     enum class Type : uint16_t { Ok, OkCancel, YesNo, YesNoCancel, RetryCancelIgnore };
@@ -30,25 +30,19 @@ public:
 	o->MessageBox_ask (prompt, type, flags);
 	return true;
     }
-};
-
-//}}}-------------------------------------------------------------------
-//{{{ PMessageBoxR
-
-class PMessageBoxR : public ProxyR {
-    DECLARE_INTERFACE (MessageBoxR, (answer,"q"))
 public:
-    using Answer = PMessageBox::Answer;
-public:
-    explicit		PMessageBoxR (const Msg::Link& l) : ProxyR (l) {}
-    void		reply (Answer answer) const { send (m_answer(), answer); }
-    template <typename O>
-    inline static constexpr bool dispatch (O* o, const Msg& msg) {
-	if (msg.method() != m_answer())
-	    return false;
-	o->MessageBoxR_reply (msg.read().read<Answer>());
-	return true;
-    }
+    class Reply : public Proxy::Reply {
+    public:
+	explicit constexpr Reply (Msg::Link l) : Proxy::Reply (l) {}
+	void reply (Answer answer) const { send (m_answer(), answer); }
+	template <typename O>
+	inline static constexpr bool dispatch (O* o, const Msg& msg) {
+	    if (msg.method() != m_answer())
+		return false;
+	    o->MessageBox_reply (msg.read().read<Answer>());
+	    return true;
+	}
+    };
 };
 
 //}}}-------------------------------------------------------------------
@@ -56,9 +50,9 @@ public:
 class MessageBox : public Window {
     using Type = PMessageBox::Type;
     using Answer = PMessageBox::Answer;
+    IMPLEMENT_INTERFACES_I (Window, (PMessageBox),)
 public:
-    explicit		MessageBox (const Msg::Link& l);
-    bool		dispatch (Msg& msg) override;
+    explicit		MessageBox (Msg::Link l);
     inline void		MessageBox_ask (const string_view& prompt, Type type, uint16_t flags);
     void		on_key (key_t key) override;
 private:
@@ -66,7 +60,6 @@ private:
 private:
     string		_prompt;
     Type		_type;
-    PMessageBoxR	_reply;
     enum : widgetid_t {
 	wid_Frame = wid_First,
 	wid_Message,

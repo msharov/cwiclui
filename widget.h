@@ -8,32 +8,39 @@
 
 namespace cwiclui {
 
-//{{{ PWidgetR ---------------------------------------------------------
+//{{{ PWidget ----------------------------------------------------------
 
-class PWidgetR : public ProxyR {
-    DECLARE_INTERFACE (WidgetR, (event,SIGNATURE_ui_Event)(modified,"qqs")(selection,SIGNATURE_ui_Size"q"))
+class PWidget : public Proxy {
+    DECLARE_INTERFACE (Proxy, Widget,
+	(event,SIGNATURE_ui_Event)
+	(modified,"qqs")
+	(selection,SIGNATURE_ui_Size"q")
+    )
 public:
-    constexpr		PWidgetR (const Msg::Link& l)	: ProxyR(l) {}
-    constexpr		PWidgetR (mrid_t f, mrid_t t)	: ProxyR(Msg::Link{f,t}) {}
-    void		modified (widgetid_t wid, const string& t) const
-			    { resend (m_modified(), wid, uint16_t(0), t); }
-    void		selection (widgetid_t wid, const Size& s) const
-			    { resend (m_selection(), s, wid); }
-    template <typename O>
-    inline static constexpr bool dispatch (O* o, const Msg& msg) {
-	if (msg.method() == m_modified()) {
-	    auto is = msg.read();
-	    auto wid = is.read<widgetid_t>();
-	    is.skip (2);
-	    o->PWidgetR_modified (wid, is.read<string_view>());
-	} else if (msg.method() == m_selection()) {
-	    auto is = msg.read();
-	    decltype(auto) s = is.read<Size>();
-	    o->PWidgetR_selection (is.read<widgetid_t>(), move(s));
-	} else
-	    return false;
-	return true;
-    }
+    class Reply : public Proxy::Reply {
+    public:
+	explicit constexpr	Reply (Msg::Link l)	: Proxy::Reply(l) {}
+	constexpr	Reply (mrid_t f, mrid_t t)	: Reply (Msg::Link{f,t}) {}
+	void	modified (widgetid_t wid, const string& t) const
+		    { resend (m_modified(), wid, uint16_t(0), t); }
+	void	selection (widgetid_t wid, const Size& s) const
+		    { resend (m_selection(), s, wid); }
+	template <typename O>
+	inline static constexpr bool dispatch (O* o, const Msg& msg) {
+	    if (msg.method() == m_modified()) {
+		auto is = msg.read();
+		auto wid = is.read<widgetid_t>();
+		is.skip (2);
+		o->Widget_modified (wid, is.read<string_view>());
+	    } else if (msg.method() == m_selection()) {
+		auto is = msg.read();
+		decltype(auto) s = is.read<Size>();
+		o->Widget_selection (is.read<widgetid_t>(), move(s));
+	    } else
+		return false;
+	    return true;
+	}
+    };
 };
 
 //}}}
@@ -157,7 +164,7 @@ protected:
     void		set_size_hints (const Size& sh)		{ if (!flag (f_ForcedSizeHints)) _size_hints = sh; }
     void		set_size_hints (dim_t w, dim_t h)	{ set_size_hints (Size(w,h)); }
 private:
-    inline PWidgetR	widget_reply (void) const;
+    inline PWidget::Reply widget_reply (void) const;
     virtual void	on_draw (drawlist_t&) const {}
 private:
     string		_text;

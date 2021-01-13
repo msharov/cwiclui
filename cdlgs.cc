@@ -9,18 +9,13 @@ namespace cwiclui {
 
 //----------------------------------------------------------------------
 
-MessageBox::MessageBox (const Msg::Link& l)
+IMPLEMENT_INTERFACES_D (MessageBox)
+
+MessageBox::MessageBox (Msg::Link l)
 : Window(l)
 ,_prompt()
 ,_type()
-,_reply(l)
 {
-}
-
-bool MessageBox::dispatch (Msg& msg)
-{
-    return PMessageBox::dispatch (this, msg)
-	|| Window::dispatch (msg);
 }
 
 void MessageBox::MessageBox_ask (const string_view& prompt, Type type, uint16_t)
@@ -61,7 +56,7 @@ void MessageBox::MessageBox_ask (const string_view& prompt, Type type, uint16_t)
 
 void MessageBox::done (Answer answer)
 {
-    _reply.reply (answer);
+    PMessageBox::Reply (creator_link()).reply (answer);
     close();
 }
 

@@ -6,10 +6,10 @@
 #pragma once
 #include "config.h"
 
+//{{{ Graphics related types -------------------------------------------
+
 namespace cwiclui {
 using namespace cwiclo;
-
-//{{{ Graphics related types -------------------------------------------
 
 using coord_t	= int16_t;
 using dim_t	= make_unsigned_t<coord_t>;
@@ -129,7 +129,7 @@ enum class MSAA : uint8_t { OFF, X2, X4, X8, X16, MAX = X16 };
 inline static constexpr color_t RGBA (colray_t r, colray_t g, colray_t b, colray_t a = numeric_limits<colray_t>::max())
     { return (color_t(a)<<24)|(color_t(b)<<16)|(color_t(g)<<8)|r; }
 inline static constexpr color_t RGBA (color_t c)
-    { return bswap(c); }
+    { return native_to_be(c); }
 inline static constexpr color_t RGB (colray_t r, colray_t g, colray_t b)
     { return RGBA(r,g,b,numeric_limits<colray_t>::max()); }
 inline static constexpr color_t RGB (color_t c)
@@ -439,11 +439,15 @@ private:
 
 // A screen manages windows and renders their contents
 class PScreen : public Proxy {
-    DECLARE_INTERFACE (Screen,
+    DECLARE_INTERFACE (Proxy, Screen,
 	(draw, "ay")
 	(get_info, "")
 	(open, SIGNATURE_ui_WindowInfo)
 	(close, "")
+	(event, SIGNATURE_ui_Event)
+	(expose, "")
+	(resize, SIGNATURE_ui_WindowInfo)
+	(screen_info, SIGNATURE_ui_ScreenInfo)
     )
 public:
     using drawlist_t	= memblock;
@@ -470,42 +474,32 @@ public:
 	    return false;
 	return true;
     }
-};
-
-//}}}----------------------------------------------------------------------
-//{{{ PScreenR
-
-class PScreenR : public ProxyR {
-    DECLARE_INTERFACE (ScreenR,
-	(event, SIGNATURE_ui_Event)
-	(expose, "")
-	(resize, SIGNATURE_ui_WindowInfo)
-	(screen_info, SIGNATURE_ui_ScreenInfo)
-    )
 public:
-    constexpr	PScreenR (const Msg::Link& l)	: ProxyR (l) {}
-    void	event (const Event& e) const	{ send (m_event(), e); }
-    void	expose (void) const		{ send (m_expose()); }
-    void	resize (const WindowInfo& wi) const
-		    { send (m_resize(), wi); }
-    void	screen_info (const ScreenInfo& si) const
-		    { send (m_screen_info(), si); }
-    template <typename O>
-    inline static constexpr bool dispatch (O* o, const Msg& msg) {
-	if (msg.method() == m_event())
-	    o->ScreenR_event (msg.read().read<Event>());
-	else if (msg.method() == m_expose())
-	    o->ScreenR_expose();
-	else if (msg.method() == m_resize())
-	    o->ScreenR_resize (msg.read().read<WindowInfo>());
-	else if (msg.method() == m_screen_info())
-	    o->ScreenR_screen_info (msg.read().read<ScreenInfo>());
-	else
-	    return false;
-	return true;
-    }
+    class Reply : public Proxy::Reply {
+    public:
+	explicit constexpr Reply (Msg::Link l)	: Proxy::Reply (l) {}
+	void	event (const Event& e) const	{ send (m_event(), e); }
+	void	expose (void) const		{ send (m_expose()); }
+	void	resize (const WindowInfo& wi) const
+			{ send (m_resize(), wi); }
+	void	screen_info (const ScreenInfo& si) const
+			{ send (m_screen_info(), si); }
+	template <typename O>
+	inline static constexpr bool dispatch (O* o, const Msg& msg) {
+	    if (msg.method() == m_event())
+		o->Screen_event (msg.read().read<Event>());
+	    else if (msg.method() == m_expose())
+		o->Screen_expose();
+	    else if (msg.method() == m_resize())
+		o->Screen_resize (msg.read().read<WindowInfo>());
+	    else if (msg.method() == m_screen_info())
+		o->Screen_screen_info (msg.read().read<ScreenInfo>());
+	    else
+		return false;
+	    return true;
+	}
+    };
 };
-
-//}}}----------------------------------------------------------------------
 
 } // namespace cwiclui
+//}}}----------------------------------------------------------------------

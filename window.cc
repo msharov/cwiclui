@@ -6,11 +6,12 @@
 #include "window.h"
 #include "cwidgets.h"
 
+//{{{ Widget creation --------------------------------------------------
 namespace cwiclui {
 
-//{{{ Widget creation --------------------------------------------------
+IMPLEMENT_INTERFACES_D (Window)
 
-Window::Window (const Msg::Link& l)
+Window::Window (Msg::Link l)
 : Msger (l)
 ,_widgets()
 ,_widgets_area()
@@ -106,7 +107,7 @@ void Window::layout (void)
     _scr.open (oinfo);
 }
 
-void Window::ScreenR_resize (const Info& wi)
+void Window::Screen_resize (const Info& wi)
 {
     _info = wi;
     on_resize();
@@ -167,13 +168,5 @@ void Window::on_key (key_t k)
 	focus_prev();
 }
 
-bool Window::dispatch (Msg& msg)
-{
-    return PScreenR::dispatch (this, msg)
-	|| PWidgetR::dispatch (this, msg)
-	|| Msger::dispatch (msg);
-}
-
-//}}}-------------------------------------------------------------------
-
 } // namespace cwiclui
+//}}}-------------------------------------------------------------------
