@@ -56,7 +56,7 @@ void MessageBox::MessageBox_ask (const string_view& prompt, Type type, uint16_t)
 
 void MessageBox::done (Answer answer)
 {
-    PMessageBox::Reply (creator_link()).reply (answer);
+    IMessageBox::Reply (creator_link()).reply (answer);
     close();
 }
 

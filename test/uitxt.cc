@@ -132,7 +132,7 @@ public:
 private:
     TestApp (void) : AppL(),_uitwp (mrid_App) {}
 private:
-    Proxy	_uitwp;
+    Interface	_uitwp;
 };
 
 CWICLO_APP_L (TestApp, (App::Timer)(TerminalScreenWindow))

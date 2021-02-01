@@ -160,7 +160,7 @@ void TerminalScreen::update_screen_size (void)
     reset();
 }
 
-void TerminalScreen::Signal_signal (const PSignal::Info& si)
+void TerminalScreen::Signal_signal (const ISignal::Info& si)
 {
     if (si.sig == SIGWINCH)
 	update_screen_size();
@@ -565,7 +565,7 @@ void TerminalScreenWindow::on_event (const Event& ev)
 	if (flag (f_DrawPending))
 	    return draw();	// for multiple draws per frame, only send vsync for the last one
     }
-    PScreen::Reply (creator_link()).event (ev);
+    IScreen::Reply (creator_link()).event (ev);
 }
 
 //}}}-------------------------------------------------------------------
@@ -590,7 +590,7 @@ void TerminalScreenWindow::on_resize (const Rect& warea)
 {
     _winfo.set_area (warea);
     _surface.resize (_winfo.area().size());
-    PScreen::Reply (creator_link()).resize (_winfo);
+    IScreen::Reply (creator_link()).resize (_winfo);
     reset();
 }
 
@@ -598,7 +598,7 @@ void TerminalScreenWindow::on_new_screen_info (void)
 {
     if (auto newarea = clip_to_screen(); newarea != area())
 	on_resize (newarea);
-    PScreen::Reply (creator_link()).screen_info (screen_info());
+    IScreen::Reply (creator_link()).screen_info (screen_info());
 }
 
 //}}}-------------------------------------------------------------------

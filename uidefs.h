@@ -435,24 +435,24 @@ private:
 #define SIGNATURE_ui_WindowInfo	"(" SIGNATURE_ui_Rect "qyyyyyy)"
 
 //}}}-------------------------------------------------------------------
-//{{{ PScreen
+//{{{ IScreen
 
 // A screen manages windows and renders their contents
-class PScreen : public Proxy {
-    DECLARE_INTERFACE (Proxy, Screen,
-	(draw, "ay")
-	(get_info, "")
-	(open, SIGNATURE_ui_WindowInfo)
-	(close, "")
-	(event, SIGNATURE_ui_Event)
-	(expose, "")
-	(resize, SIGNATURE_ui_WindowInfo)
-	(screen_info, SIGNATURE_ui_ScreenInfo)
+class IScreen : public Interface {
+    DECLARE_INTERFACE (Interface, Screen,
+	(draw,		"ay")
+	(get_info,	"")
+	(open,		SIGNATURE_ui_WindowInfo)
+	(close,		"")
+	(event,		SIGNATURE_ui_Event)
+	(expose,	"")
+	(resize,	SIGNATURE_ui_WindowInfo)
+	(screen_info,	SIGNATURE_ui_ScreenInfo)
     )
 public:
     using drawlist_t	= memblock;
 public:
-    explicit	PScreen (mrid_t caller)		: Proxy (caller) {}
+    explicit	IScreen (mrid_t caller)		: Interface (caller) {}
     void	get_info (void) const		{ send (m_get_info()); }
     void	close (void) const		{ send (m_close()); }
     void	open (const WindowInfo& wi) const { send (m_open(), wi); }
@@ -475,9 +475,9 @@ public:
 	return true;
     }
 public:
-    class Reply : public Proxy::Reply {
+    class Reply : public Interface::Reply {
     public:
-	explicit constexpr Reply (Msg::Link l)	: Proxy::Reply (l) {}
+	explicit constexpr Reply (Msg::Link l)	: Interface::Reply (l) {}
 	void	event (const Event& e) const	{ send (m_event(), e); }
 	void	expose (void) const		{ send (m_expose()); }
 	void	resize (const WindowInfo& wi) const

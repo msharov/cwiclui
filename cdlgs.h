@@ -8,15 +8,15 @@
 
 namespace cwiclui {
 
-//{{{ PMessageBox ------------------------------------------------------
+//{{{ IMessageBox ------------------------------------------------------
 
-class PMessageBox : public Proxy {
-    DECLARE_INTERFACE (Proxy, MessageBox, (ask,"qqs")(answer,"q"))
+class IMessageBox : public Interface {
+    DECLARE_INTERFACE (Interface, MessageBox, (ask,"qqs")(answer,"q"))
 public:
     enum class Answer : uint16_t { Cancel, Ok, Ignore, Yes = Ok, Retry = Ok, No = Ignore };
     enum class Type : uint16_t { Ok, OkCancel, YesNo, YesNoCancel, RetryCancelIgnore };
 public:
-    explicit	PMessageBox (mrid_t caller) : Proxy (caller) {}
+    explicit	IMessageBox (mrid_t caller) : Interface (caller) {}
     void	ask (const string& prompt, Type type = Type()) const
 		    { send (m_ask(), type, uint16_t(0), prompt); }
     template <typename O>
@@ -31,9 +31,9 @@ public:
 	return true;
     }
 public:
-    class Reply : public Proxy::Reply {
+    class Reply : public Interface::Reply {
     public:
-	explicit constexpr Reply (Msg::Link l) : Proxy::Reply (l) {}
+	explicit constexpr Reply (Msg::Link l) : Interface::Reply (l) {}
 	void reply (Answer answer) const { send (m_answer(), answer); }
 	template <typename O>
 	inline static constexpr bool dispatch (O* o, const Msg& msg) {
@@ -48,9 +48,9 @@ public:
 //}}}-------------------------------------------------------------------
 
 class MessageBox : public Window {
-    using Type = PMessageBox::Type;
-    using Answer = PMessageBox::Answer;
-    IMPLEMENT_INTERFACES_I (Window, (PMessageBox),)
+    using Type = IMessageBox::Type;
+    using Answer = IMessageBox::Answer;
+    IMPLEMENT_INTERFACES_I (Window, (IMessageBox),)
 public:
     explicit		MessageBox (Msg::Link l);
     inline void		MessageBox_ask (const string_view& prompt, Type type, uint16_t flags);

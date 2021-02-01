@@ -262,23 +262,23 @@ private:
 #define SIGNATURE_Settings	"a(" SIGNATURE_SettingsKey ")"
 
 //}}}-------------------------------------------------------------------
-//{{{ PSettings
+//{{{ ISettings
 
-class PSettings : public Proxy {
-    DECLARE_INTERFACE_E (Proxy, Settings,
-	(get_keys, "qqs")
-	(set_keys, SIGNATURE_Settings)
-	(delete_key, "s")
-	(delete_entry, "ss")
-	(flush, "")
-	(keys, SIGNATURE_Settings)
-	(flushed,""),
+class ISettings : public Interface {
+    DECLARE_INTERFACE_E (Interface, Settings,
+	(get_keys,	"qqs")
+	(set_keys,	SIGNATURE_Settings)
+	(delete_key,	"s")
+	(delete_entry,	"ss")
+	(flush,		"")
+	(keys,		SIGNATURE_Settings)
+	(flushed,	""),
 	"@~cwiclui/settings.socket","p1u"
     )
 public:
     enum class Scope : uint16_t { Merged, User, System };
 public:
-    explicit	PSettings (mrid_t caller)		: Proxy (caller) {}
+    explicit	ISettings (mrid_t caller)		: Interface (caller) {}
     void	get_keys (const string_view& path = "", uint16_t depth = UINT16_MAX, Scope scope = Scope::Merged) const
 							{ send (m_get_keys(), depth, scope, path); }
     void	get_key (const string_view& path) const	{ get_keys (path, 0); }
@@ -310,9 +310,9 @@ public:
 	return true;
     }
 public:
-    class Reply : public Proxy::Reply {
+    class Reply : public Interface::Reply {
     public:
-	constexpr explicit Reply (Msg::Link l)		: Proxy::Reply(l) {}
+	constexpr explicit Reply (Msg::Link l)		: Interface::Reply(l) {}
 	void	keys (const Settings& keys) const	{ send (m_keys(), keys); }
 	void	flushed (void) const			{ send (m_flushed()); }
 	template <typename O>

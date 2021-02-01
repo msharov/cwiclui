@@ -8,18 +8,18 @@
 
 namespace cwiclui {
 
-//{{{ PWidget ----------------------------------------------------------
+//{{{ IWidget ----------------------------------------------------------
 
-class PWidget : public Proxy {
-    DECLARE_INTERFACE (Proxy, Widget,
+class IWidget : public Interface {
+    DECLARE_INTERFACE (Interface, Widget,
 	(event,SIGNATURE_ui_Event)
 	(modified,"qqs")
 	(selection,SIGNATURE_ui_Size"q")
     )
 public:
-    class Reply : public Proxy::Reply {
+    class Reply : public Interface::Reply {
     public:
-	explicit constexpr	Reply (Msg::Link l)	: Proxy::Reply(l) {}
+	explicit constexpr	Reply (Msg::Link l)	: Interface::Reply(l) {}
 	constexpr	Reply (mrid_t f, mrid_t t)	: Reply (Msg::Link{f,t}) {}
 	void	modified (widgetid_t wid, const string& t) const
 		    { resend (m_modified(), wid, uint16_t(0), t); }
@@ -84,7 +84,7 @@ public:
     #define SIGNATURE_ui_Widget_Layout	"(yyq)"
     //}}}
     using PanelType	= Drawlist::PanelType;
-    using drawlist_t	= PScreen::drawlist_t;
+    using drawlist_t	= IScreen::drawlist_t;
     using widgetvec_t	= vector<unique_ptr<Widget>>;
     using widget_factory_t	= Widget* (*)(Window* w, const Layout& l);
     enum { ProgressMax = 1024 };
@@ -164,7 +164,7 @@ protected:
     void		set_size_hints (const Size& sh)		{ if (!flag (f_ForcedSizeHints)) _size_hints = sh; }
     void		set_size_hints (dim_t w, dim_t h)	{ set_size_hints (Size(w,h)); }
 private:
-    inline PWidget::Reply widget_reply (void) const;
+    inline IWidget::Reply widget_reply (void) const;
     virtual void	on_draw (drawlist_t&) const {}
 private:
     string		_text;

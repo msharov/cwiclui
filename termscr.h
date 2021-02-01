@@ -14,7 +14,7 @@ class TerminalScreenWindow;
 //----------------------------------------------------------------------
 
 class TerminalScreen : public Msger {
-    IMPLEMENT_INTERFACES_I (Msger,,(PTimer)(PSignal))
+    IMPLEMENT_INTERFACES_I (Msger,,(ITimer)(ISignal))
 public:
     enum { f_UIMode = Msger::f_Last, f_CaretOn, f_InputEOF, f_Last };
     using windowid_t = WindowInfo::windowid_t;
@@ -89,7 +89,7 @@ public:
     void	unregister_window (const TerminalScreenWindow* w);
     Rect	position_window (const WindowInfo& winfo) const;
     void	draw_window (const TerminalScreenWindow* w);
-    inline void	Signal_signal (const PSignal::Info& s);
+    inline void	Signal_signal (const ISignal::Info& s);
     void	Timer_timer (fd_t fd);
     auto&	screen_info (void) const { return _scrinfo; }
 protected:
@@ -109,14 +109,14 @@ private:
     ScreenInfo	_scrinfo;
     Surface::Cell _lastcell;
     Point	_curwpos;
-    PTimer	_ptermi;
-    PTimer	_ptermo;
+    ITimer	_ptermi;
+    ITimer	_ptermo;
 };
 
 //----------------------------------------------------------------------
 
 class TerminalScreenWindow : public Msger {
-    IMPLEMENT_INTERFACES_I (Msger, (PScreen),)
+    IMPLEMENT_INTERFACES_I (Msger, (IScreen),)
 public:
     using Surface	= TerminalScreen::Surface;
     using Cell		= Surface::Cell;
@@ -140,10 +140,10 @@ public:
     void	on_new_screen_info (void);
     bool	is_mapped (void) const		{ return area().w; }
 private:
-		friend class PScreen;
+		friend class IScreen;
     inline void	Screen_open (const WindowInfo& wi);
     inline void	Screen_draw (const cmemlink& dl);
-    void	Screen_get_info (void)		{ PScreen::Reply (creator_link()).screen_info (screen_info()); }
+    void	Screen_get_info (void)		{ IScreen::Reply (creator_link()).screen_info (screen_info()); }
     void	Screen_close (void)		{ set_unused (true); }
 		friend class Drawlist;
     Rect	interior_area (void) const	{ return Rect (area().size()); }

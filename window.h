@@ -11,12 +11,12 @@ namespace cwiclui {
 class Widget;
 
 class Window : public Msger {
-    IMPLEMENT_INTERFACES_I (Msger,,(PWidget)(PScreen))
+    IMPLEMENT_INTERFACES_I (Msger,,(IWidget)(IScreen))
 public:
     using key_t		= Event::key_t;
     using Layout	= Widget::Layout;
     using Info		= WindowInfo;
-    using drawlist_t	= PScreen::drawlist_t;
+    using drawlist_t	= IScreen::drawlist_t;
     using windowid_t	= WindowInfo::windowid_t;
     enum { f_DrawInProgress = Msger::f_Last, f_DrawPending, f_Last };
 public:
@@ -89,7 +89,7 @@ private:
 private:
     unique_ptr<Widget>	_widgets;
     Rect		_widgets_area;
-    PScreen		_scr;
+    IScreen		_scr;
     Size		_size_hints;
     widgetid_t		_focused;
     Info		_info;
