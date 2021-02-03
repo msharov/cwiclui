@@ -24,26 +24,18 @@ public:
     public:
 	constexpr auto	compare (const char* n) const		{ return __builtin_strcmp (name, n); }
 	constexpr auto	compare (const value_type& v) const	{ return compare (v.name); }
-	constexpr bool	operator== (const char* n) const	{ return 0 == compare (n); }
-	constexpr bool	operator== (const value_type& v) const	{ return 0 == compare (v); }
-	constexpr bool	operator!= (const char* n) const	{ return 0 != compare (n); }
-	constexpr bool	operator!= (const value_type& v) const	{ return 0 != compare (v); }
-	constexpr bool	operator< (const char* n) const		{ return 0 > compare (n); }
-	constexpr bool	operator< (const value_type& v) const	{ return 0 > compare (v); }
-	constexpr bool	operator> (const char* n) const		{ return 0 < compare (n); }
-	constexpr bool	operator> (const value_type& v) const	{ return 0 < compare (v); }
-	constexpr bool	operator<= (const char* n) const	{ return 0 >= compare (n); }
-	constexpr bool	operator<= (const value_type& v) const	{ return 0 >= compare (v); }
-	constexpr bool	operator>= (const char* n) const	{ return 0 <= compare (n); }
-	constexpr bool	operator>= (const value_type& v) const	{ return 0 <= compare (v); }
+	constexpr auto	operator== (const char* n) const	{ return 0 == compare (n); }
+	constexpr auto	operator== (const value_type& v) const	{ return 0 == compare (v); }
+	constexpr auto	operator<=> (const char* n) const	{ return compare (n); }
+	constexpr auto	operator<=> (const value_type& v) const	{ return compare (v); }
 	constexpr auto	str_value (void) const			{ return string_view (value, description-1); }
 	constexpr bool	bool_value (void) const			{ return value && value[0] == 't'; }
-	constexpr long	int_value (void) const			{ return value ? atol(value) : 0; }
-	constexpr double float_value (void) const		{ return value ? atof(value) : 0; }
-	auto		enum_value (const char* evn, size_t evnsz, unsigned nfv = 0) const
+	constexpr auto	int_value (void) const			{ return value ? atol(value) : 0l; }
+	constexpr auto	float_value (void) const		{ return value ? atof(value) : 0.0; }
+	constexpr auto	enum_value (const char* evn, size_t evnsz, unsigned nfv = 0) const
 			    { return value ? zstr::index (value, evn, evnsz, nfv) : nfv; }
 	template <typename E, unsigned N>
-	auto		enum_value (const char (&evn)[N], E nfv = E()) const
+	constexpr auto	enum_value (const char (&evn)[N], E nfv = E()) const
 			    { return E (enum_value (ARRAY_BLOCK(evn), unsigned(nfv))); }
     };
     //}}}2--------------------------------------------------------------
@@ -55,7 +47,7 @@ public:
     using difference_type	= string::difference_type;
     //{{{2 const_iterator ----------------------------------------------
     class const_iterator {
-	void scan_value (void) {
+	constexpr void scan_value (void) {
 	    zstr::cii ei (_p, _n);
 	    _v.name = *ei;
 	    _v.value = *++ei;
@@ -65,23 +57,19 @@ public:
 	}
     public:
 	constexpr	const_iterator (const char* p)			:_p(p),_n(),_v{} {}
-			const_iterator (const char* p, size_type n)	:_p(p),_n(n),_v{} { scan_value(); }
-			const_iterator (const zstr::cii& i)		: const_iterator (*i,i.remaining()) {}
+	constexpr	const_iterator (const char* p, size_type n)	:_p(p),_n(n),_v{} { scan_value(); }
+	constexpr	const_iterator (const zstr::cii& i)		: const_iterator (*i,i.remaining()) {}
 	constexpr	operator bool (void) const			{ return _p != nullptr; }
-	auto&		operator++ (void)				{ _p = _v.next; scan_value(); return *this; }
-	auto		operator++ (int)				{ auto r (*this); ++*this; return r; }
-	auto&		operator+= (unsigned n)				{ while (n--) ++*this; return *this; }
-	auto		operator+ (unsigned n)				{ auto r (*this); r += n; return r; }
+	constexpr auto&	operator++ (void)				{ _p = _v.next; scan_value(); return *this; }
+	constexpr auto	operator++ (int)				{ auto r (*this); ++*this; return r; }
+	constexpr auto&	operator+= (unsigned n)				{ while (n--) ++*this; return *this; }
+	constexpr auto	operator+ (unsigned n)				{ auto r (*this); r += n; return r; }
 	constexpr auto	base (void) const				{ return _p; }
 	constexpr auto	remaining (void) const				{ return _n; }
 	constexpr auto&	operator* (void) const				{ return _v; }
 	constexpr auto	operator-> (void) const				{ return &_v; }
-	constexpr bool	operator== (const const_iterator& o) const	{ return base() == o.base(); }
-	constexpr bool	operator!= (const const_iterator& o) const	{ return base() != o.base(); }
-	constexpr bool	operator< (const const_iterator& o) const	{ return base() < o.base(); }
-	constexpr bool	operator> (const const_iterator& o) const	{ return base() > o.base(); }
-	constexpr bool	operator<= (const const_iterator& o) const	{ return base() <= o.base(); }
-	constexpr bool	operator>= (const const_iterator& o) const	{ return base() >= o.base(); }
+	constexpr auto	operator== (const const_iterator& o) const	{ return base() == o.base(); }
+	constexpr auto	operator<=> (const const_iterator& o) const	{ return base() <=> o.base(); }
     private:
 	const char*	_p;
 	size_type	_n;
@@ -103,35 +91,30 @@ public:
     auto&		operator= (const SettingsKey& k)	{ _entries = k._entries; _modified = k._modified; return *this; }
     constexpr auto	path (void) const	{ return _entries.data(); }
     constexpr auto	name (void) const	{ auto n = __builtin_strrchr (path(), '/'); return n ? n+1 : path(); }
-    auto		filename (void) const	{ return zstr::next (path()); }
+    constexpr auto	filename (void) const	{ return zstr::next (path()); }
     void		set_filename (const string_view& filename);
     constexpr auto	modified (void) const	{ return _modified; }
     constexpr void	set_modified (time_t t)	{ _modified = t; }
     constexpr auto	compare (const char* cpath) const	{ return strcmp (path(), cpath); }
     constexpr auto	compare (const string_view& cpath)const	{ return strncmp (path(), cpath.c_str(), cpath.size()); }
     constexpr auto	compare (const SettingsKey& k) const	{ return compare (k.path()); }
-    #define SETTINGS_KEY_CMP_OPERATOR(fn,op)\
-    constexpr bool	fn (const char* path) const		{ return compare (path) op 0; }\
-    constexpr bool	fn (const string_view& path) const	{ return compare (path) op 0; }\
-    constexpr bool	fn (const SettingsKey& k) const		{ return compare (k) op 0; }
-			SETTINGS_KEY_CMP_OPERATOR (operator==, ==)
-			SETTINGS_KEY_CMP_OPERATOR (operator!=, !=)
-			SETTINGS_KEY_CMP_OPERATOR ( operator<,  <)
-			SETTINGS_KEY_CMP_OPERATOR ( operator>,  >)
-			SETTINGS_KEY_CMP_OPERATOR (operator<=, <=)
-			SETTINGS_KEY_CMP_OPERATOR (operator>=, >=)
-    #undef SETTINGS_KEY_CMP_OPERATOR
-    auto		begin (void) const	{ return const_iterator (ebegin()+2u); }
-    iterator		begin (void)		{ return as_const(*this).begin(); }
-    auto		cbegin (void) const	{ return begin(); }
-    auto		end (void) const	{ return const_iterator (_entries.end()); }
-    auto		end (void)		{ return iterator (_entries.end()); }
-    auto		cend (void) const	{ return end(); }
-    auto&		at (unsigned i) const	{ return *(begin()+i); }
-    auto&		operator[] (unsigned i) const	{ return at(i); }
+    constexpr auto	operator== (const SettingsKey& k) const	{ return 0 == compare (k); }
+    constexpr auto	operator== (const string_view& p) const	{ return 0 == compare (p); }
+    constexpr auto	operator== (const char* p) const	{ return 0 == compare (p); }
+    constexpr auto	operator<=> (const SettingsKey& k) const{ return compare (k); }
+    constexpr auto	operator<=> (const string_view& p) const{ return compare (p); }
+    constexpr auto	operator<=> (const char* p) const	{ return compare (p); }
+    constexpr auto	begin (void) const	{ return const_iterator (ebegin()+2u); }
+    constexpr iterator	begin (void)		{ return as_const(*this).begin(); }
+    constexpr auto	cbegin (void) const	{ return begin(); }
+    constexpr auto	end (void) const	{ return const_iterator (_entries.end()); }
+    constexpr auto	end (void)		{ return iterator (_entries.end()); }
+    constexpr auto	cend (void) const	{ return end(); }
+    constexpr auto&	at (unsigned i) const	{ return *(begin()+i); }
+    constexpr auto&	operator[] (unsigned i) const	{ return at(i); }
     constexpr size_type	max_size (void) const	{ return _entries.max_size()/4; }
     size_type		size (void) const;
-    bool		empty (void) const	{ return !begin().remaining(); }
+    constexpr bool	empty (void) const	{ return !begin().remaining(); }
     void		shrink_to_fit (void)	{ _entries.shrink_to_fit(); }
     void		clear (void)		{ auto eb = begin().base(); _entries.erase (eb, _entries.end()-eb); }
     void		erase (iterator ei)	{ _entries.erase (ei->name, ei->next-ei->name); }
